@@ -1,0 +1,15 @@
+<!-- posts/templates/posts/components/symbol_display.html -->
+{% load static %}
+
+<div class="symbol-container">
+    <div class="symbol-grid">
+        {% for code in symbol_codes %}
+            <img src="{% static 'symbols/symbol_'|add:code|add:'.png' %}" 
+                 class="symbol-img {{ size|default:'symbol-img' }}"
+                 alt="{{ code }}"
+                 onerror="this.src='https://via.placeholder.com/{{ size|default:'56' }}/FFDDBB/663300?text={{ code }}'">
+        {% empty %}
+            <span class="text-gray-400">No symbols</span>
+        {% endfor %}
+    </div>
+</div>

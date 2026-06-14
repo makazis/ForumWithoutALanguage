@@ -14,6 +14,7 @@ def decode_symbol(code):
 def split_sequence(sequence):
     if not sequence: 
         return []
+    
     return [sequence[i*2]+sequence[i*2+1] for i in range(int(len(sequence)/2))]
 
 @register.filter

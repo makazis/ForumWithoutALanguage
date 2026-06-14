@@ -1,0 +1,83 @@
+<!-- posts/templates/posts/leaderboard.html -->
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block title %}Leaderboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+    .rank-2 { background: linear-gradient(135deg, #9ca3af, #6b7280); }
+    .rank-3 { background: linear-gradient(135deg, #d97706, #b45309); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">🏆 Global Leaderboard</h1>
+        <span class="text-gray-500">{{ total_users }} total players</span>
+    </div>
+    
+    {% if user.is_authenticated and user_rank %}
+        <div class="mb-3 p-3 bg-blue-50 rounded-lg">
+            <span class="text-gray-600">Your current rank:</span>
+            <span class="font-bold text-primary text-lg">#{{ user_rank }}</span>
+        </div>
+    {% endif %}
+    
+    <div class="leaderboard">
+        <div class="leaderboard-header">
+            <span>Rank</span>
+            <span>Player</span>
+            <span>Points</span>
+            <span>Posts</span>
+            <span>Guesses</span>
+        </div>
+        
+        {% for player in users %}
+        <div class="leaderboard-row {% if request.user.id == player.user.id %}current-user-row{% endif %}"
+             data-label="Player">
+            <div class="leaderboard-rank">
+                {% if player.rank == 1 %}🥇
+                {% elif player.rank == 2 %}🥈
+                {% elif player.rank == 3 %}🥉
+                {% else %}#{{ player.rank }}{% endif %}
+            </div>
+            
+            <div class="leaderboard-user">
+                <div class="leaderboard-avatar">
+                    {{ player.user.username|first|upper }}
+                </div>
+                <a href="{% url 'user_profile' player.user.id %}" class="nav-link">
+                    {{ player.user.username }}
+                </a>
+                {% if request.user.id == player.user.id %}
+                    <span class="tag">You</span>
+                {% endif %}
+            </div>
+            
+            <div class="leaderboard-points">
+                {{ player.points }} pts
+            </div>
+            
+            <div>
+                {{ player.post_count }}
+            </div>
+            
+            <div>
+                {{ player.guess_count }}
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-4 text-center text-gray-500">
+            No players yet. Be the first to create a post!
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="text-center mt-3">
+        <a href="{% url 'post_list' %}" class="btn-primary">← Back to Posts</a>
+    </div>
+</div>
+{% endblock %}

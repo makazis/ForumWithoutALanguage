@@ -4,7 +4,7 @@ from .models import Post,Tag,Comment
 
 @admin.register(Post)
 class PostAdmin(admin.ModelAdmin):
-    list_display=('id',"author","timestamp","prompt")
+    list_display=('id',"author","timestamp","prompt","symbols","guess_count")
     list_filter=("timestamp",)
 
 @admin.register(Tag)

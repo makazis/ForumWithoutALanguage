@@ -1,0 +1,20 @@
+<!-- posts/templates/posts/components/symbol_keyboard.html -->
+{% load static %}
+
+<div class="symbol-keyboard">
+    {% for i in "0123456789abcdefghij"|make_list %}
+        {% with forloop.counter0 as index %}
+            {% if index < 20 %}
+                {% with code=index|stringformat:"02d" %}
+                <button type="button" 
+                        onclick="addSymbol('{{ code }}')"
+                        class="symbol-btn">
+                    <img src="{% static 'symbols/symbol_'|add:code|add:'.png' %}" 
+                         alt="{{ code }}"
+                         onerror="this.src='https://via.placeholder.com/40/DDDDDD/888888?text={{ code }}'">
+                </button>
+                {% endwith %}
+            {% endif %}
+        {% endwith %}
+    {% endfor %}
+</div>

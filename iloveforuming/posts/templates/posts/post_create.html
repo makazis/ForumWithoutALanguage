@@ -1,171 +1,89 @@
+<!-- posts/templates/posts/post_create.html -->
 {% extends 'posts/base.html' %}
 {% load static %}
-{% load symbol_tags %}
+
+{% block title %}Create New Post{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">Create a New Post</h1>
-
-<div class="bg-white p-6 rounded shadow">
+<div class="card">
+    <div class="card-header">
+        <h1 class="card-title">Create a New Post</h1>
+    </div>
+    
     <form method="POST" id="post-form">
         {% csrf_token %}
         
-        <!-- Hidden Prompt -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2">Secret Prompt</label>
+        <div class="form-group">
+            <label class="form-label">Secret Prompt</label>
             <input type="text" name="prompt" required
-                   class="w-full p-2 border rounded"
+                   class="form-input"
                    placeholder="e.g., I feel happy today">
+            <p class="form-help">This is hidden from other users — only you know the answer.</p>
         </div>
         
-        <!-- Symbol Sequence (hidden input, stores codes like "00,05,12") -->
-        <input type="hidden" name="symbols" id="symbols" value="">
-        
-        <!-- Symbol Keyboard -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2"></label>
-            <div class="grid grid-cols-10 gap-3 p-4 bg-gray-50">
-                {% for i in "0123456789abcdefghij"|make_list %}
-                    {% with forloop.counter0 as index %}
-                        {% if index < 20 %}
-                            {% with code=index|stringformat:"02d" %}
-                            <button type="button" 
-                                    onclick="addSymbol('{{ code }}')"
-                                    class="symbol-btn p-3 border-2 rounded-lg hover:bg-gray-200 hover:border-blue-400 transition">
-                                <img src="{% static 'symbols/symbol_'|add:code|add:'.png' %}" 
-                                     alt="Symbol {{ code }}"
-                                     class="w-12 h-12 mx-auto">
-                            </button>
-                            {% endwith %}
-                        {% endif %}
-                    {% endwith %}
-                {% endfor %}
-            </div>
+        <div class="form-group">
+            <label class="form-label">Symbol Explanation</label>
+            <input type="text" name="symbols" id="symbol_sequence" required
+                   class="form-input" placeholder="Click symbols to build sequence">
             
-            <!-- Preview Area -->
-            <div class="mt-4">
-                <label class="block text-gray-700 font-bold mb-2">Your Symbol Sequence Preview:</label>
-                <div id="symbol-preview" 
-                     class="p-4 bg-gray-100 rounded border min-h-[80px] flex flex-wrap gap-2 items-center">
-                    <span class="text-gray-400 text-sm">Click symbols above to build your message</span>
+            {% include 'posts/components/symbol_keyboard.html' %}
+            
+            <div class="form-group">
+                <label class="form-label">Preview:</label>
+                <div id="symbol-preview" class="symbol-container">
+                    <span class="text-gray-400">Click symbols above to build your message</span>
+                </div>
+                <div class="mt-1">
+                    <button type="button" onclick="removeLastSymbol()" class="btn btn-warning">↩ Remove Last</button>
+                    <button type="button" onclick="clearAllSymbols()" class="btn btn-danger">✖ Clear All</button>
                 </div>
             </div>
-            
-            <!-- Control buttons -->
-            <div class="mt-3 flex gap-2">
-                <button type="button" onclick="removeLastSymbol()" 
-                        class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">
-                    Remove Last
-                </button>
-                <button type="button" onclick="clearAllSymbols()" 
-                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
-                    Clear All
-                </button>
-            </div>
         </div>
         
-        <!-- Intended Tags -->
-        <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2">Intended Tags (select 2-4)</label>
-            <select name="intended_tags" multiple required class="w-full p-2 border rounded h-32">
+        <div class="form-group">
+            <label class="form-label">Intended Tags (select 2-4)</label>
+            <select name="intended_tags" multiple required class="form-select" size="6">
                 {% for tag in all_tags %}
                     <option value="{{ tag.id }}">{{ tag.name }}</option>
                 {% empty %}
                     <option disabled>No tags created yet. Add tags via admin panel.</option>
                 {% endfor %}
             </select>
-            <p class="text-gray-500 text-sm mt-1">Hold Ctrl (Cmd on Mac) to select multiple.</p>
+            <p class="form-help">Hold Ctrl (Cmd on Mac) to select multiple.</p>
         </div>
         
-        <button type="submit" class="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600">
-            Create Post
-        </button>
-        <a href="/" class="ml-2 text-gray-500">Cancel</a>
+        <button type="submit" class="btn btn-primary btn-lg">Create Post</button>
+        <a href="{% url 'post_list' %}" class="btn">Cancel</a>
     </form>
 </div>
 
 <script>
-    // Store the sequence of symbol codes
-    let symbolSequence = [];
+    // Override the global functions if needed
+    window.symbolSequence = [];
     
-    // Mapping from index to 2-char code (00-19 for first 20 symbols)
-    // For now, we use "00" through "19" — later you can expand to "0A", "0B", etc.
-    function getSymbolCode(index) {
-        // Returns 2-digit code with leading zero (00-19 for first 20 symbols)
-        return index.toString().padStart(2, '0');
-    }
-    
-    function addSymbol(code) {
-        symbolSequence.push(code);
-        updatePreview();
-        updateHiddenInput();
-    }
-    
-    function removeLastSymbol() {
-        if (symbolSequence.length > 0) {
-            symbolSequence.pop();
-            updatePreview();
-            updateHiddenInput();
-        }
-    }
-    
-    function clearAllSymbols() {
-        symbolSequence = [];
-        updatePreview();
-        updateHiddenInput();
-    }
-    
-    function updatePreview() {
+    function updateSymbolPreview() {
         const previewDiv = document.getElementById('symbol-preview');
-        
-        if (symbolSequence.length === 0) {
-            previewDiv.innerHTML = '<span class="text-gray-400 text-sm">Click symbols above to build your message</span>';
+        if (window.symbolSequence.length === 0) {
+            previewDiv.innerHTML = '<span class="text-gray-400">Click symbols to build your message</span>';
             return;
         }
         
-        // Build preview with images
         let html = '';
-        for (let i = 0; i < symbolSequence.length; i++) {
-            const code = symbolSequence[i];
-            html += `<img src="{% static 'symbols/symbol_' %}` + code + `.png" 
-                           class="symbol-img w-10 h-10 inline-block m-1 border rounded p-1 bg-white"
-                           alt="${code}"
-                           onerror="this.src='https://via.placeholder.com/40/FFDDBB/663300?text=${code}'">`;
+        for (let i = 0; i < window.symbolSequence.length; i++) {
+            const code = window.symbolSequence[i];
+            html += `<img src="/static/symbols/symbol_${code}.png" class="symbol-img-sm inline-block m-1" alt="${code}">`;
         }
-        
-        // Add a small "X" button to remove individual symbols if desired
         previewDiv.innerHTML = html;
     }
     
     function updateHiddenInput() {
-        const hiddenInput = document.getElementById('symbols');
-        hiddenInput.value = symbolSequence.join(',');
-        
-        // Optional: log for debugging
-        console.log('Symbol sequence saved:', hiddenInput.value);
+        document.getElementById('symbol_sequence').value = window.symbolSequence.join('');
     }
     
-    // Form validation
     document.getElementById('post-form').addEventListener('submit', function(e) {
-        if (symbolSequence.length === 0) {
+        if (window.symbolSequence.length === 0) {
             e.preventDefault();
-            alert('Please add at least one symbol to explain your prompt!');
-            return false;
-        }
-        if (symbolSequence.length < 1) {
-            e.preventDefault();
-            alert('Please add at least 1 symbol (max 20)');
-            return false;
-        }
-    });
-    
-    // Optional: add keyboard support (press number keys 1-0)
-    document.addEventListener('keydown', function(e) {
-        const key = e.key;
-        if (key >= '0' && key <= '9') {
-            const index = parseInt(key);
-            if (index >= 0 && index <= 9) {
-                addSymbol(getSymbolCode(index));
-            }
+            alert('Please add at least one symbol!');
         }
     });
 </script>

@@ -1,0 +1,23 @@
+<!-- posts/templates/posts/components/navbar.html -->
+<nav class="navbar">
+    <div class="navbar-inner">
+        <a href="{% url 'post_list' %}" class="logo">
+             Forum Without a Language
+        </a>
+        
+        <div class="nav-links">
+            <a href="{% url 'post_list' %}" class="nav-link">All Posts</a>
+            <a href="{% url 'leaderboard' %}" class="nav-link">Leaderboard</a>
+            
+            {% if user.is_authenticated %}
+                <a href="{% url 'user_profile' user.id %}" class="nav-link">
+                     {{ user.username }}
+                </a>
+                <a href="{% url 'post_create' %}" class="btn-primary">+ New Post</a>
+                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn-primary">Login</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
