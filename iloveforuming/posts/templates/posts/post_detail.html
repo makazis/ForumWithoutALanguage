@@ -28,7 +28,7 @@
         <!-- Intended Tags (hidden - for debugging/development) -->
         {% if user.is_superuser %}
         <div class="mt-3 p-2 bg-yellow-50 rounded text-sm">
-            <span class="text-gray-500">🔒 Admin only - Intended tags:</span>
+            <span class="text-gray-500"> Admin only - Intended tags:</span>
             {% for tag in post.intended_tags.all %}
                 <span class="tag">{{ tag.name }}</span>
             {% endfor %}
@@ -40,7 +40,7 @@
             {% if user.is_authenticated %}
                 {% if has_guessed %}
                     <div class="bg-gray-100 p-3 rounded text-center">
-                        <span class="text-gray-600">✅ You already guessed on this post</span>
+                        <span class="text-gray-600"> You already guessed on this post</span>
                         {% if user_guess.is_correct %}
                             <span class="tag correct ml-2">Correct!</span>
                         {% endif %}
@@ -61,7 +61,7 @@
                         <span class="text-gray-600">You cannot guess on your own post</span>
                     </div>
                 {% else %}
-                    <h3 class="font-bold text-lg mb-3">🤔 What do these symbols mean?</h3>
+                    <h3 class="font-bold text-lg mb-3"> What do these symbols mean?</h3>
                     <form method="POST" action="{% url 'submit_guess' post.id %}">
                         {% csrf_token %}
                         
@@ -93,7 +93,7 @@
     {% if all_guesses %}
     <div class="card mt-3">
         <div class="card-header">
-            <h3 class="font-bold">📊 Recent Guesses</h3>
+            <h3 class="font-bold"> Recent Guesses</h3>
         </div>
         <div class="space-y-2">
             {% for guess in all_guesses|slice:":10" %}

@@ -13,8 +13,13 @@
                          alt="{{ code }}"
                          onerror="this.src='https://via.placeholder.com/40/DDDDDD/888888?text={{ code }}'">
                 </button>
+                
                 {% endwith %}
             {% endif %}
         {% endwith %}
     {% endfor %}
+    <div class="mt-1">
+                    <button type="button" onclick="removeLastSymbol()" class="btn btn-warning">↩ Remove Last</button>
+                    <button type="button" onclick="clearAllSymbols()" class="btn btn-danger">✖ Clear All</button>
+                </div>
 </div>

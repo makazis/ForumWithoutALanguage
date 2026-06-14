@@ -22,30 +22,64 @@ def post_list(request):
 
 @login_required
 def post_create(request):
-    all_tags = Tag.objects.all()
-    
+    """Create a new post with custom prompt"""
     if request.method == 'POST':
         prompt = request.POST.get('prompt')
         symbols = request.POST.get('symbols')
         
         if not prompt or not symbols:
             messages.error(request, "Please fill in all fields")
-            return render(request, 'posts/post_create.html', {'all_tags': all_tags})
+            return render(request, 'posts/post_create.html')
+        
         post = Post.objects.create(
             author=request.user,
             prompt=prompt,
-            symbols="".join(symbols.split(",")),
-            guess_count=0
+            symbols=symbols,
+            is_random=False,
+            point_multiplier=1,
         )
-        messages.success(request, "Post created successfully! Others will now try to guess your meaning.")
+        
+        messages.success(request, "Post created successfully!")
         return redirect('post_detail', post_id=post.id)
     
-    return render(request, 'posts/post_create.html', {'all_tags': all_tags})
+    return render(request, 'posts/post_create.html')
 
+# ===== RANDOM POST CREATE =====
+@login_required
+def post_create_random(request):
+    """Create a post with a random generated prompt (x10 multiplier)"""
+    random_prompt = get_random_sentence()
+    
+    if request.method == 'POST':
+        symbols = request.POST.get('symbols')
+        
+        if not symbols:
+            messages.error(request, "Please add symbols to explain the prompt")
+            return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt})
+        
+        post = Post.objects.create(
+            author=request.user,
+            prompt=random_prompt,
+            symbols=symbols,
+            is_random=True,
+            point_multiplier=10,
+        )
+        
+        messages.success(request, f"Random post created! (x{post.point_multiplier} point multiplier for guessers!)")
+        return redirect('post_detail', post_id=post.id)
+    
+    return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt})
+
+# ===== SUBMIT GUESS =====
 @login_required
 def submit_guess(request, post_id):
-    """Process a user's tag guess"""
+    """Process a user's word guess and award points"""
     post = get_object_or_404(Post, id=post_id)
+    
+    # Don't allow guessing on your own post
+    if request.user == post.author:
+        messages.error(request, "You cannot guess on your own post!")
+        return redirect('post_detail', post_id=post.id)
     
     # Check if already guessed
     if Guess.objects.filter(user=request.user, post=post).exists():
@@ -53,33 +87,60 @@ def submit_guess(request, post_id):
         return redirect('post_detail', post_id=post.id)
     
     if request.method == 'POST':
-        guessed_tag_ids = request.POST.getlist('guessed_tags')
-        guesser_profile, _ = Profile.objects.get_or_create(user=request.user)
-        author_profile, _ = Profile.objects.get_or_create(user=post.author)
+        guessed_text = request.POST.get('guessed_words', '').strip()
         
-        if is_correct:
-            # 15 points to guesser, 10 to creator
-            guesser_profile.points += 15
-            guesser_profile.save()
-            
-            author_profile.points += 10
-            author_profile.save()
-        if not guessed_tag_ids:
-            messages.error(request, "Please select at least one tag")
+        if not guessed_text:
+            messages.error(request, "Please enter your guess")
             return redirect('post_detail', post_id=post.id)
         
-        # Create the guess record
+        # Get words from prompt
+        prompt_words = set(post.get_prompt_words())
+        
+        # Get guessed words (split by spaces or commas)
+        guessed_words = set(re.findall(r'\b\w+\b', guessed_text.lower()))
+        
+        # Find correct words
+        correct_words = list(prompt_words.intersection(guessed_words))
+        score = len(correct_words) * post.point_multiplier
+        
+        # Create guess record
         guess = Guess.objects.create(
             user=request.user,
             post=post,
-            is_correct=False,  # We'll calculate this later
+            guessed_words=guessed_text,
+            correct_words=correct_words,
+            score_earned=score,
         )
-        guess.guessed_tags.set(guessed_tag_ids)
         
-        messages.success(request, "Guess submitted!")
+        # Award points to guesser
+        profile, _ = Profile.objects.get_or_create(user=request.user)
+        profile.points += score
+        profile.save()
+        
+        # Award points to post creator (if not already awarded)
+        if not post.points_awarded:
+            author_profile, _ = Profile.objects.get_or_create(user=post.author)
+            # Author gets half of guesser's score
+            author_points = int(score / 2)
+            author_profile.points += author_points
+            author_profile.save()
+            post.points_awarded = True
+            post.save()
+        
+        # Success message
+        if score > 0:
+            multiplier_text = f" (x{post.point_multiplier} multiplier!)" if post.point_multiplier > 1 else ""
+            messages.success(
+                request, 
+                f"🎉 You got {len(correct_words)} correct word(s)! +{score} points{multiplier_text}"
+            )
+            if len(correct_words) < len(prompt_words):
+                missing = len(prompt_words) - len(correct_words)
+                messages.info(request, f"💡 You missed {missing} word(s). Try another post!")
+        else:
+            messages.info(request, "❌ No matching words found. Try again on another post!")
         
     return redirect('post_detail', post_id=post.id)
-
 
 # posts/views.py - Updated user_profile view
 def user_profile(request, user_id):
@@ -170,85 +231,6 @@ def post_detail(request, post_id):
     }
     return render(request, 'posts/post_detail.html', context)
 
-
-# Add/Update the submit_guess view with full point calculation
-@login_required
-def submit_guess(request, post_id):
-    """Process a user's tag guess and award points if correct"""
-    post = get_object_or_404(Post, id=post_id)
-    
-    # Check if already guessed
-    if Guess.objects.filter(user=request.user, post=post).exists():
-        messages.warning(request, "You already guessed on this post!")
-        return redirect('post_detail', post_id=post.id)
-    
-    # Don't allow guessing on your own post
-    if request.user == post.author:
-        messages.error(request, "You cannot guess on your own post!")
-        return redirect('post_detail', post_id=post.id)
-    
-    if request.method == 'POST':
-        guessed_tag_ids = [int(id) for id in request.POST.getlist('guessed_tags')]
-        
-        if not guessed_tag_ids:
-            messages.error(request, "Please select at least one tag")
-            return redirect('post_detail', post_id=post.id)
-        
-        # Get intended tags as set of IDs
-        intended_ids = set(post.intended_tags.values_list('id', flat=True))
-        guessed_set = set(guessed_tag_ids)
-        
-        # Calculate correctness (exact match required for full points)
-        is_correct = (intended_ids == guessed_set)
-        
-        # Calculate partial points (optional: 5 points if at least one correct)
-        has_correct_tag = len(intended_ids.intersection(guessed_set)) > 0
-        partial_points = has_correct_tag and not is_correct
-        
-        # Create the guess record
-        guess = Guess.objects.create(
-            user=request.user,
-            post=post,
-            is_correct=is_correct,
-        )
-        guess.guessed_tags.set(guessed_tag_ids)
-        
-        # Award points
-        points_awarded = 0
-        if is_correct:
-            # 15 points to guesser, 10 to creator
-            request.user.profile.points += 15
-            request.user.profile.save()
-            
-            post.author.profile.points += 10
-            post.author.profile.save()
-            
-            post.points_awarded = True
-            post.save()
-            
-            points_awarded = 15
-            messages.success(
-                request, 
-                f"🎉 CORRECT! You earned 15 points! {post.author.username} earned 10 points!"
-            )
-        elif partial_points:
-            # 5 points for at least one correct tag
-            request.user.profile.points += 5
-            request.user.profile.save()
-            points_awarded = 5
-            messages.info(
-                request,
-                "👍 Partial match! You got at least one tag right. +5 points!"
-            )
-        else:
-            messages.info(request, "❌ No matches. Try another post!")
-        
-        # Store points awarded in session for display
-        request.session['last_points'] = points_awarded
-        
-    return redirect('post_detail', post_id=post.id)
-
-# posts/views.py - Add these comment views
 
 @login_required
 def comment_create(request, post_id):

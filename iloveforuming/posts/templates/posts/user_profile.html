@@ -9,7 +9,7 @@
     <!-- Profile Info Card -->
     <div class="card">
         <div class="card-header">
-            <h1 class="card-title">👤 {{ profile_user.username }}</h1>
+            <h1 class="card-title"> {{ profile_user.username }}</h1>
             {% if user.id == profile_user.id %}
                 <span class="text-gray-400">(You)</span>
             {% endif %}
@@ -39,7 +39,7 @@
     <!-- Recent Posts Card -->
     <div class="card">
         <div class="card-header">
-            <h2 class="card-title">📝 Recent Posts</h2>
+            <h2 class="card-title"> Recent Posts</h2>
         </div>
         
         {% if posts %}

@@ -2,7 +2,7 @@
 :root {
     --primary-color: #840000;
     --primary-dark: #db0000;
-    --secondary-color: #73002e;
+    --secondary-color: #c1b100;
     --danger-color: #ef4444;
     --warning-color: #00f2ff;
     --dark: #c37c2b;
@@ -40,7 +40,9 @@ body {
     margin: 0 auto;
     padding: 0 1rem;
 }
-
+a {
+    color: var(--primary-color);
+}
 
 .navbar {
     background: var(--white);
@@ -100,16 +102,16 @@ body {
 }
 
 .btn-secondary {
-    background: var(--secondary-color);
-    color: var(--white);
+    background: var(--white);
+    color: var(--secondary-color);
     padding: 0.5rem 1rem;
-    border-radius: var(--radius);
+
     text-decoration: none;
 }
 
 .btn-danger {
-    background: var(--danger-color);
-    color: var(--white);
+    background: var(--white);
+    color: var(--danger-color);
     padding: 0.5rem 1rem;
     border-radius: var(--radius);
     text-decoration: none;
@@ -178,7 +180,7 @@ body {
 
 .symbol-btn {
     background: var(--white);
-    border: 0px solid #e5e7eb;
+    border: 0px solid #000000;
     padding: 0rem;
     cursor: pointer;
     transition: all 0.2s;
@@ -221,7 +223,7 @@ body {
 .form-textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 1px solid #d1d5db;
+    border: 1px solid #230000;
     border-radius: var(--radius);
     font-size: 1rem;
     transition: border-color 0.2s;
@@ -406,7 +408,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    color: white;
+    color: rgb(30, 0, 0);
     font-weight: bold;
 }
 
@@ -416,7 +418,7 @@ body {
 }
 
 .current-user-row {
-    background: #dbeafe;
+    background: #100000;
     border-left: 4px solid var(--primary-color);
 }
 
@@ -471,7 +473,7 @@ body {
     padding: 0.25rem 0.5rem;
     border-radius: 9999px;
     font-size: 0.75rem;
-    color: var(--gray);
+    color: var(--primary-dark);
 }
 
 .tag.correct {
