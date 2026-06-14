@@ -1,22 +1,27 @@
-/* posts/static/css/style.css */
-
-/* ===== CSS VARIABLES (Easy to change colors globally) ===== */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400..900&display=swap');
 :root {
-    --primary-color: #6366f1;
-    --primary-dark: #4f46e5;
-    --secondary-color: #10b981;
+    --primary-color: #840000;
+    --primary-dark: #db0000;
+    --secondary-color: #73002e;
     --danger-color: #ef4444;
-    --warning-color: #f59e0b;
-    --dark: #1f2937;
-    --gray: #6b7280;
-    --light-gray: #f3f4f6;
-    --white: #ffffff;
+    --warning-color: #00f2ff;
+    --dark: #c37c2b;
+    --gray: #000000;
+    --light-gray: #000000;
+    --white: #000000;
     --shadow: 0 1px 3px rgba(0,0,0,0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
     --radius: 0.5rem;
 }
 
-/* ===== GLOBAL STYLES ===== */
+
+.cinzel-uniquifier {
+  font-family: "Cinzel", serif;
+  font-optical-sizing: auto;
+  font-weight: 500;
+  font-style: normal;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -24,7 +29,7 @@
 }
 
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: "Cinzel", serif;
     background-color: var(--light-gray);
     color: var(--dark);
     line-height: 1.5;
@@ -36,7 +41,7 @@ body {
     padding: 0 1rem;
 }
 
-/* ===== NAVBAR ===== */
+
 .navbar {
     background: var(--white);
     box-shadow: var(--shadow);
@@ -72,13 +77,13 @@ body {
 }
 
 .nav-link {
-    color: var(--gray);
+    color: var(--primary-color);
     text-decoration: none;
     transition: color 0.2s;
 }
 
 .nav-link:hover {
-    color: var(--primary-color);
+    color: var(--primary-dark);
 }
 
 .btn-primary {
@@ -110,7 +115,6 @@ body {
     text-decoration: none;
 }
 
-/* ===== CARD COMPONENT ===== */
 .card {
     background: var(--white);
     border-radius: var(--radius);
@@ -119,43 +123,33 @@ body {
     margin-bottom: 1rem;
 }
 
-.card-header {
-    border-bottom: 1px solid var(--light-gray);
-    padding-bottom: 0.75rem;
-    margin-bottom: 1rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
 .card-title {
     font-size: 1.25rem;
     font-weight: 600;
 }
 
-/* ===== SYMBOL DISPLAY ===== */
 .symbol-container {
     background: var(--light-gray);
     border-radius: var(--radius);
     padding: 1.5rem;
-    text-align: center;
+    text-align: left;
     margin: 1rem 0;
 }
 
 .symbol-grid {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: left;
     gap: 0.5rem;
 }
 
 .symbol-img {
     width: 56px;
     height: 56px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid #000000;
     border-radius: var(--radius);
     background: var(--white);
-    padding: 0.25rem;
+    padding: 0rem;
     transition: transform 0.2s;
 }
 
@@ -176,19 +170,16 @@ body {
 /* ===== SYMBOL KEYBOARD ===== */
 .symbol-keyboard {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 0.75rem;
-    padding: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(px, 1fr));
+    gap: 0rem;
+    padding: 0rem;
     background: var(--light-gray);
-    border-radius: var(--radius);
-    margin: 1rem 0;
 }
 
 .symbol-btn {
     background: var(--white);
-    border: 2px solid #e5e7eb;
-    border-radius: var(--radius);
-    padding: 0.75rem;
+    border: 0px solid #e5e7eb;
+    padding: 0rem;
     cursor: pointer;
     transition: all 0.2s;
     text-align: center;
@@ -287,7 +278,7 @@ body {
 
 /* ===== BUTTONS ===== */
 .btn {
-    padding: 0.5rem 1rem;
+    
     border-radius: var(--radius);
     border: none;
     cursor: pointer;
@@ -349,7 +340,7 @@ body {
     }
     
     .symbol-keyboard {
-        grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(20px, 1fr));
     }
 }
 

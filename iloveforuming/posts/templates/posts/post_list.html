@@ -11,8 +11,8 @@
     {% for post in posts %}
     <div class="card">
         <div class="card-header">
-            <span class="text-gray-500">By {{ post.author.username }}</span>
-            <span class="text-gray-400 text-sm">{{ post.created_at|date:"M d, Y" }}</span>
+            
+            
         </div>
         
         {% with symbol_codes=post.get_symbol_codes %}
@@ -21,6 +21,8 @@
         
         <div class="mt-2">
             <a href="{% url 'post_detail' post.id %}" class="btn-primary">View & Guess →</a>
+            <span class="text-gray-500">               By {{ post.author.username }} | </span> <span class="text-gray-400 text-sm">{{ post.timestamp|date:"M d, Y" }}</span>
+
         </div>
     </div>
     {% empty %}

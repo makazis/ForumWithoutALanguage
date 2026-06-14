@@ -15,7 +15,7 @@
 {% block content %}
 <div class="card">
     <div class="card-header">
-        <h1 class="card-title">🏆 Global Leaderboard</h1>
+        <h1 class="card-title"> Global Leaderboard</h1>
         <span class="text-gray-500">{{ total_users }} total players</span>
     </div>
     
@@ -39,9 +39,9 @@
         <div class="leaderboard-row {% if request.user.id == player.user.id %}current-user-row{% endif %}"
              data-label="Player">
             <div class="leaderboard-rank">
-                {% if player.rank == 1 %}🥇
-                {% elif player.rank == 2 %}🥈
-                {% elif player.rank == 3 %}🥉
+                {% if player.rank == 1 %}
+                {% elif player.rank == 2 %}
+                {% elif player.rank == 3 %}
                 {% else %}#{{ player.rank }}{% endif %}
             </div>
             
