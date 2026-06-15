@@ -2,60 +2,47 @@
 {% extends 'posts/base.html' %}
 {% load static %}
 
-{% block title %}Create New Post{% endblock %}
+{% block title %}Create A New Vague Post{% endblock %}
 
 {% block content %}
 <div class="card">
     <div class="card-header">
-        <h1 class="card-title">Create a New Post</h1>
+        <h1 class="card-title">Create a New Vague Post</h1>
     </div>
     
     <form method="POST" id="post-form">
         {% csrf_token %}
         
         <div class="form-group">
-            <label class="form-label">Secret Prompt</label>
+            <label class="form-label">The Meaning of It</label>
             <input type="text" name="prompt" required
                    class="form-input"
-                   placeholder="e.g., I feel happy today">
-            <p class="form-help">This is hidden from other users — only you know the answer.</p>
+                   placeholder="e.g., The gods have chosen me, gods' strongest soldier, for a crusade. ">
+            <p class="form-help">The hidden meaning behind your texts of knowledge.</p>
         </div>
         
         <div class="form-group">
-            <label class="form-label">Symbol Explanation</label>
-            <input type="text" name="symbols" id="symbol_sequence" required
-                   class="form-input" placeholder="Click symbols to build sequence">
-            
+            <input type="hidden" name="symbols" id="symbol_sequence" required>
             {% include 'posts/components/symbol_keyboard.html' %}
             
-            <div class="form-group">
-                <label class="form-label">Preview:</label>
-                <div id="symbol-preview" class="symbol-container">
-                    <span class="text-gray-400">Click symbols above to build your message</span>
-                </div>
-                
-            </div>
+            
         </div>
         
-        <div class="form-group">
-            <label class="form-label">Intended Tags (select 2-4)</label>
-            <select name="intended_tags" multiple required class="form-select" size="6">
-                {% for tag in all_tags %}
-                    <option value="{{ tag.id }}">{{ tag.name }}</option>
-                {% empty %}
-                    <option disabled>No tags created yet. Add tags via admin panel.</option>
-                {% endfor %}
-            </select>
-            <p class="form-help">Hold Ctrl (Cmd on Mac) to select multiple.</p>
-        </div>
+        
         
         <button type="submit" class="btn btn-primary btn-lg">Create Post</button>
+        <!-- Add this button next to the create button -->
+<div class="mt-3 text-center">
+    <p class="text-gray-500 mb-2">or</p>
+    <a href="{% url 'post_create_random' %}" class="btn-secondary">
+        Random Mode!
+    </a>
+</div>
         <a href="{% url 'post_list' %}" class="btn">Cancel</a>
     </form>
 </div>
 
 <script>
-    // Override the global functions if needed
     window.symbolSequence = [];
     
     function updateSymbolPreview() {
@@ -74,7 +61,7 @@
     }
     
     function updateHiddenInput() {
-        document.getElementById('symbol_sequence').value = window.symbolSequence.join('');
+        document.getElementById('symbols').value = window.symbolSequence.join('');
     }
     
     document.getElementById('post-form').addEventListener('submit', function(e) {

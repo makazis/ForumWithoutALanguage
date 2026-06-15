@@ -18,8 +18,13 @@
             {% endif %}
         {% endwith %}
     {% endfor %}
-    <div class="mt-1">
-                    <button type="button" onclick="removeLastSymbol()" class="btn btn-warning">↩ Remove Last</button>
-                    <button type="button" onclick="clearAllSymbols()" class="btn btn-danger">✖ Clear All</button>
-                </div>
+    
 </div>
+<div class="mt-1">
+    <button type="button" onclick="removeLastSymbol()" class="btn btn-warning">Remove Last</button>
+    <button type="button" onclick="clearAllSymbols()" class="btn btn-danger">Clear All</button>
+</div>
+                <label class="form-label">Preview:</label>
+                <div id="symbol-preview" class="symbol-container">
+                    <span class="text-gray-400">Click symbols above to build your message</span>
+                </div>

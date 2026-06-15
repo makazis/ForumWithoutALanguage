@@ -6,6 +6,7 @@ from django.db.models import Count, Q, F
 from django.core.paginator import Paginator
 from django.contrib.auth.models import User
 from .models import Post, Tag, Guess, Comment, Profile
+from .random_sentences import get_random_sentence_w_multiplier
 
 # Create your views here.
 def post_list(request):
@@ -26,7 +27,7 @@ def post_create(request):
     if request.method == 'POST':
         prompt = request.POST.get('prompt')
         symbols = request.POST.get('symbols')
-        
+        print(prompt,symbols)
         if not prompt or not symbols:
             messages.error(request, "Please fill in all fields")
             return render(request, 'posts/post_create.html')
@@ -35,8 +36,7 @@ def post_create(request):
             author=request.user,
             prompt=prompt,
             symbols=symbols,
-            is_random=False,
-            point_multiplier=1,
+            multiplier=1,
         )
         
         messages.success(request, "Post created successfully!")
@@ -47,8 +47,7 @@ def post_create(request):
 # ===== RANDOM POST CREATE =====
 @login_required
 def post_create_random(request):
-    """Create a post with a random generated prompt (x10 multiplier)"""
-    random_prompt = get_random_sentence()
+    multiplier,random_prompt = get_random_sentence_w_multiplier()
     
     if request.method == 'POST':
         symbols = request.POST.get('symbols')
@@ -61,14 +60,13 @@ def post_create_random(request):
             author=request.user,
             prompt=random_prompt,
             symbols=symbols,
-            is_random=True,
-            point_multiplier=10,
+            multiplier=multiplier,
         )
         
-        messages.success(request, f"Random post created! (x{post.point_multiplier} point multiplier for guessers!)")
+        messages.success(request, f"Random post created! (x{post.multiplier} point multiplier for guessers!)")
         return redirect('post_detail', post_id=post.id)
     
-    return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt})
+    return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt,'multiplier': multiplier})
 
 # ===== SUBMIT GUESS =====
 @login_required
@@ -97,11 +95,12 @@ def submit_guess(request, post_id):
         prompt_words = set(post.get_prompt_words())
         
         # Get guessed words (split by spaces or commas)
-        guessed_words = set(re.findall(r'\b\w+\b', guessed_text.lower()))
+        r=guessed_text.split(" ").strip(",.;-!?")
+        guessed_words =[i.lower for i in r]
         
         # Find correct words
         correct_words = list(prompt_words.intersection(guessed_words))
-        score = len(correct_words) * post.point_multiplier
+        score = len(correct_words) * post.multiplier
         
         # Create guess record
         guess = Guess.objects.create(
@@ -129,7 +128,7 @@ def submit_guess(request, post_id):
         
         # Success message
         if score > 0:
-            multiplier_text = f" (x{post.point_multiplier} multiplier!)" if post.point_multiplier > 1 else ""
+            multiplier_text = f" (x{post.multiplier} multiplier!)" if post.multiplier > 1 else ""
             messages.success(
                 request, 
                 f"🎉 You got {len(correct_words)} correct word(s)! +{score} points{multiplier_text}"
@@ -146,23 +145,24 @@ def submit_guess(request, post_id):
 def user_profile(request, user_id):
     """Display user profile with their posts and stats"""
     profile_user = get_object_or_404(User, id=user_id)
+    profile, _ = Profile.objects.get_or_create(user=profile_user)
     user_posts = profile_user.posts.all().order_by('-timestamp')
+    user_guesses = profile_user.guesses.all().order_by('-timestamp')
     
-    # Get or create profile (safety check)
-    profile, created = Profile.objects.get_or_create(user=profile_user)
-    
-    # Get user's stats
-    total_posts = user_posts.count()
-    total_guesses_made = profile_user.guesses.count()
     total_points = profile.points
+    total_posts = user_posts.count()
+    total_guesses = user_guesses.count()
+    total_correct_words = sum(len(g.correct_words) for g in user_guesses)
     
     context = {
         'profile_user': profile_user,
         'profile': profile,
         'posts': user_posts,
-        'total_posts': total_posts,
-        'total_guesses': total_guesses_made,
+        'guesses': user_guesses[:20],
         'total_points': total_points,
+        'total_posts': total_posts,
+        'total_guesses': total_guesses,
+        'total_correct_words': total_correct_words,
     }
     return render(request, 'posts/user_profile.html', context)
 # Add this function for leaderboard

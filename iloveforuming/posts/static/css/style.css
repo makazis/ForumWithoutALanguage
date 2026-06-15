@@ -172,7 +172,7 @@ a {
 /* ===== SYMBOL KEYBOARD ===== */
 .symbol-keyboard {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
     gap: 0rem;
     padding: 0rem;
     background: var(--light-gray);
@@ -234,7 +234,6 @@ a {
 .form-textarea:focus {
     outline: none;
     border-color: var(--primary-color);
-    ring: 2px solid var(--primary-color);
 }
 
 .form-help {
@@ -255,27 +254,23 @@ a {
 }
 
 .message-success {
-    background: #d1fae5;
-    color: #065f46;
-    border: 1px solid #a7f3d0;
+    background: #000000;
+    color: #951b1b;
 }
 
 .message-error {
-    background: #fee2e2;
-    color: #991b1b;
-    border: 1px solid #fecaca;
+    background: #000605;
+    color: #0093a1;
 }
 
 .message-warning {
-    background: #fed7aa;
-    color: #92400e;
-    border: 1px solid #fed7aa;
+    background: #000000;
+    color: #00cb2c;
 }
 
 .message-info {
-    background: #dbeafe;
-    color: #1e40af;
-    border: 1px solid #bfdbfe;
+    background: #000000;
+    color: #b9c000;
 }
 
 /* ===== BUTTONS ===== */
