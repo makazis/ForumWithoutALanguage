@@ -39,10 +39,7 @@
         <div class="leaderboard-row {% if request.user.id == player.user.id %}current-user-row{% endif %}"
              data-label="Player">
             <div class="leaderboard-rank">
-                {% if player.rank == 1 %}
-                {% elif player.rank == 2 %}
-                {% elif player.rank == 3 %}
-                {% else %}#{{ player.rank }}{% endif %}
+                #{{ player.rank }}
             </div>
             
             <div class="leaderboard-user">

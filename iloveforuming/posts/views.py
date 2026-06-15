@@ -80,7 +80,7 @@ def submit_guess(request, post_id):
         return redirect('post_detail', post_id=post.id)
     
     # Check if already guessed
-    if Guess.objects.filter(user=request.user, post=post).exists():
+    if Guess.objects.filter(author=request.user, post=post).exists():
         messages.warning(request, "You already guessed on this post!")
         return redirect('post_detail', post_id=post.id)
     
@@ -95,8 +95,8 @@ def submit_guess(request, post_id):
         prompt_words = set(post.get_prompt_words())
         
         # Get guessed words (split by spaces or commas)
-        r=guessed_text.split(" ").strip(",.;-!?")
-        guessed_words =[i.lower for i in r]
+        r=guessed_text.split(" ")
+        guessed_words =[i.lower().strip(",.;-!?") for i in r]
         
         # Find correct words
         correct_words = list(prompt_words.intersection(guessed_words))
@@ -104,7 +104,7 @@ def submit_guess(request, post_id):
         
         # Create guess record
         guess = Guess.objects.create(
-            user=request.user,
+            author=request.user,
             post=post,
             guessed_words=guessed_text,
             correct_words=correct_words,
@@ -117,14 +117,13 @@ def submit_guess(request, post_id):
         profile.save()
         
         # Award points to post creator (if not already awarded)
-        if not post.points_awarded:
-            author_profile, _ = Profile.objects.get_or_create(user=post.author)
-            # Author gets half of guesser's score
-            author_points = int(score / 2)
-            author_profile.points += author_points
-            author_profile.save()
-            post.points_awarded = True
-            post.save()
+        
+        author_profile, _ = Profile.objects.get_or_create(user=post.author)
+        # Author gets half of guesser's score
+        author_points = int(score / 2)
+        author_profile.points += author_points
+        author_profile.save()
+        post.save()
         
         # Success message
         if score > 0:

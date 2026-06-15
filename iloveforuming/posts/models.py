@@ -25,8 +25,8 @@ class Post(models.Model):
     def get_symbol_codes(self):
         return split_sequence(self.symbols)
     def get_prompt_words(self):
-        r=self.prompt.split(" ").strip(",.;-!?")
-        r=[i.lower for i in r]
+        r=self.prompt.split(" ")
+        r=[i.lower().strip(",.;-!?") for i in r]
         print(r)
         return r
 
@@ -69,5 +69,5 @@ def save_user_profile(sender, instance, **kwargs):
         instance.profile.save()
     except Profile.DoesNotExist:
         Profile.objects.create(user=instance)
-#username: admin
-#password: admin
+#username: admin FeatherMan
+#password: admin findlands

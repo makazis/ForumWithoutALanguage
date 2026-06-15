@@ -15,7 +15,12 @@
                      {{ user.username }}
                 </a>
                 <a href="{% url 'post_create' %}" class="btn-primary">+ New Post</a>
-                <a href="{% url 'logout' %}" class="nav-link">Logout</a>
+                <form method="POST" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link" style="background: none; border: none; cursor: pointer; color: #ef4444;">
+                        Logout
+                    </button>
+                </form>
             {% else %}
                 <a href="{% url 'login' %}" class="btn-primary">Login</a>
             {% endif %}

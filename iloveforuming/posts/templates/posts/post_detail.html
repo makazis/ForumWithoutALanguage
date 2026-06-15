@@ -25,10 +25,9 @@
             {% include 'posts/components/symbol_display.html' with size='symbol-img-lg' %}
         {% endwith %}
         
-        <!-- Intended Tags (hidden - for debugging/development) -->
         {% if user.is_superuser %}
         <div class="mt-3 p-2 bg-yellow-50 rounded text-sm">
-            <span class="text-gray-500">🔒 Admin only - Original prompt:</span>
+            <span class="text-gray-500"> Admin only - Original prompt:</span>
             <span class="font-mono">{{ post.prompt }}</span>
         </div>
         {% endif %}
@@ -38,7 +37,7 @@
             {% if user.is_authenticated %}
                 {% if has_guessed %}
                     <div class="bg-gray-100 p-3 rounded text-center">
-                        <span class="text-gray-600">✅ You already showed your interpretation</span>
+                        <span class="text-gray-600">You already showed your interpretation</span>
                         {% if user_guess.score_earned > 0 %}
                             <div class="mt-2">
                                 <span class="text-green-600 font-bold">You earned {{ user_guess.score_earned }} points!</span>
@@ -50,14 +49,14 @@
                     </div>
                 {% elif user == post.author %}
                     <div class="bg-gray-100 p-3 rounded text-center">
-                        <span class="text-gray-600">📜 You already know what this means, you wrote it after all!</span>
+                        <span class="text-gray-600">You already know what this means, you wrote it after all!</span>
                     </div>
                 {% else %}
-                    <h3 class="font-bold text-lg mb-3">🔮 Decipher the sacred texts</h3>
+                    <h3 class="font-bold text-lg mb-3">Decipher the sacred texts</h3>
                     
                     {% if post.point_multiplier > 1 %}
                         <div class="bg-purple-100 p-2 rounded mb-3 text-center">
-                            🔥 RANDOM SENTENCE CHALLENGE! x{{ post.point_multiplier }} POINT MULTIPLIER 🔥
+                         RANDOM SENTENCE! x{{ post.point_multiplier }} POINT MULTIPLIER
                         </div>
                     {% endif %}
                     
@@ -90,21 +89,18 @@
     {% if all_guesses %}
     <div class="card mt-3">
         <div class="card-header">
-            <h3 class="font-bold">📊 Top Interpretations</h3>
+            <h3 class="font-bold"> Top Interpretations</h3>
         </div>
         <div class="space-y-2">
             {% for guess in all_guesses|slice:":10" %}
             <div class="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded">
                 <div>
-                    <a href="{% url 'user_profile' guess.user.id %}" class="text-primary">
-                        {{ guess.user.username }}
+                    <a href="{% url 'user_profile' guess.author.id %}" class="text-primary">
+                        {{ guess.author.username }}
                     </a>
                     <span class="text-gray-500">found</span>
                     <span class="font-bold text-green-600">{{ guess.correct_words|length }}</span>
                     <span class="text-gray-500">words</span>
-                    {% if guess.correct_words %}
-                        <span class="text-gray-400 text-xs ml-2">({{ guess.correct_words|join:", " }})</span>
-                    {% endif %}
                 </div>
                 <div class="text-green-600 font-bold">
                     +{{ guess.score_earned }} pts
@@ -118,7 +114,7 @@
     <!-- Comments Section -->
     <div class="card mt-3">
         <div class="card-header">
-            <h3 class="font-bold">💬 Council Comments</h3>
+            <h3 class="font-bold"> Council Comments</h3>
             {% if user.is_authenticated %}
                 <button onclick="toggleCommentForm()" class="btn-secondary text-sm px-3 py-1">
                     + Add Comment
@@ -128,7 +124,7 @@
         
         <!-- Comment Form (hidden by default) -->
         <div id="comment-form" style="display: none;" class="mb-4 p-3 bg-gray-50 rounded">
-            <h4 class="font-medium mb-2">🗣️ Speak in symbols:</h4>
+            <h4 class="font-medium mb-2"> Speak in symbols:</h4>
             <form method="POST" action="{% url 'comment_create' post.id %}" id="comment-form-element">
                 {% csrf_token %}
                 
@@ -175,7 +171,7 @@
             </div>
             {% endfor %}
         {% else %}
-            <p class="text-gray-400 text-center py-4">📜 This must be discussed in the council. Leave a comment.</p>
+            <p class="text-gray-400 text-center py-4"> This must be discussed in the council. Leave a comment.</p>
         {% endif %}
     </div>
     
