@@ -16,7 +16,7 @@
                 </a>
             </div>
             <div class="text-gray-400 text-sm">
-                {{ post.created_at|date:"F j, Y g:i A" }}
+                {{ post.timestamp|date:"F j, Y g:i A" }}
             </div>
         </div>
         
@@ -28,141 +28,154 @@
         <!-- Intended Tags (hidden - for debugging/development) -->
         {% if user.is_superuser %}
         <div class="mt-3 p-2 bg-yellow-50 rounded text-sm">
-            <span class="text-gray-500"> Admin only - Intended tags:</span>
-            {% for tag in post.intended_tags.all %}
-                <span class="tag">{{ tag.name }}</span>
-            {% endfor %}
+            <span class="text-gray-500">🔒 Admin only - Original prompt:</span>
+            <span class="font-mono">{{ post.prompt }}</span>
         </div>
         {% endif %}
         
         <!-- Guessing Section -->
-        <!-- Replace the guessing section in post_detail.html -->
-
-<!-- Guessing Section -->
-<div class="mt-4 pt-3 border-t">
-    {% if user.is_authenticated %}
-        {% if has_guessed %}
-            <div class="bg-gray-100 p-3 rounded text-center">
-                <span class="text-gray-600">✅ You already guessed on this post</span>
-                {% if user_guess.score_earned > 0 %}
-                    <div class="mt-2">
-                        <span class="text-green-600 font-bold">You earned {{ user_guess.score_earned }} points!</span>
-                        <div class="text-sm text-gray-500 mt-1">
-                            Correct words: {{ user_guess.correct_words|join:", " }}
-                        </div>
+        <div class="mt-4 pt-3 border-t">
+            {% if user.is_authenticated %}
+                {% if has_guessed %}
+                    <div class="bg-gray-100 p-3 rounded text-center">
+                        <span class="text-gray-600">✅ You already showed your interpretation</span>
+                        {% if user_guess.score_earned > 0 %}
+                            <div class="mt-2">
+                                <span class="text-green-600 font-bold">You earned {{ user_guess.score_earned }} points!</span>
+                                <div class="text-sm text-gray-500 mt-1">
+                                    Correct words: {{ user_guess.correct_words|join:", " }}
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
+                {% elif user == post.author %}
+                    <div class="bg-gray-100 p-3 rounded text-center">
+                        <span class="text-gray-600">📜 You already know what this means, you wrote it after all!</span>
+                    </div>
+                {% else %}
+                    <h3 class="font-bold text-lg mb-3">🔮 Decipher the sacred texts</h3>
+                    
+                    {% if post.point_multiplier > 1 %}
+                        <div class="bg-purple-100 p-2 rounded mb-3 text-center">
+                            🔥 RANDOM SENTENCE CHALLENGE! x{{ post.point_multiplier }} POINT MULTIPLIER 🔥
+                        </div>
+                    {% endif %}
+                    
+                    <form method="POST" action="{% url 'submit_guess' post.id %}">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label class="form-label">Your interpretation of the sacred texts:</label>
+                            <input type="text" name="guessed_words" required
+                                   class="form-input"
+                                   placeholder="e.g., cat house blue sky">
+                            <p class="form-help">Type words separated by spaces. Each correct word = {{ post.point_multiplier }} point(s)</p>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            Submit Guess
+                        </button>
+                    </form>
                 {% endif %}
-            </div>
-        {% elif user == post.author %}
-            <div class="bg-gray-100 p-3 rounded text-center">
-                <span class="text-gray-600">You cannot guess on your own post</span>
-            </div>
-        {% else %}
-            <h3 class="font-bold text-lg mb-3">🤔 What words are in the original prompt?</h3>
-            
-            {% if post.point_multiplier > 1 %}
-                <div class="bg-purple-100 p-2 rounded mb-3 text-center">
-                    🔥 RANDOM SENTENCE CHALLENGE! x{{ post.point_multiplier }} POINT MULTIPLIER 🔥
+            {% else %}
+                <div class="bg-gray-100 p-3 rounded text-center">
+                    <a href="{% url 'login' %}" class="text-primary">Login</a>
+                    <span class="text-gray-600"> to participate with the language of gods!</span>
                 </div>
             {% endif %}
-            
-            <form method="POST" action="{% url 'submit_guess' post.id %}">
-                {% csrf_token %}
-                
-                <div class="form-group">
-                    <label class="form-label">Your guess (words you think are in the prompt):</label>
-                    <input type="text" name="guessed_words" required
-                           class="form-input"
-                           placeholder="e.g., cat house blue sky">
-                    <p class="form-help">Type words separated by spaces. Each correct word = {{ post.point_multiplier }} point(s)!</p>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg">
-                    Submit Guess
-                </button>
-            </form>
-        {% endif %}
-    {% else %}
-        <div class="bg-gray-100 p-3 rounded text-center">
-            <a href="{% url 'login' %}" class="text-primary">Login</a>
-            <span class="text-gray-600"> to guess what words are in the prompt!</span>
         </div>
-    {% endif %}
-</div>
-
-<!-- Recent Guesses Section -->
-{% if all_guesses %}
-<div class="card mt-3">
-    <div class="card-header">
-        <h3 class="font-bold">📊 Top Guesses</h3>
-    </div>
-    <div class="space-y-2">
-        {% for guess in all_guesses|slice:":10" %}
-        <div class="flex justify-between items-center text-sm">
-            <div>
-                <a href="{% url 'user_profile' guess.user.id %}" class="text-primary">
-                    {{ guess.user.username }}
-                </a>
-                <span class="text-gray-500">found</span>
-                <span class="font-bold text-green-600">{{ guess.correct_words|length }}</span>
-                <span class="text-gray-500">words</span>
-            </div>
-            <div class="text-gray-400 text-xs">
-                +{{ guess.score_earned }} pts
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
     </div>
     
-    <!-- Comments Section (coming soon) -->
+    <!-- Recent Guesses Section -->
+    {% if all_guesses %}
     <div class="card mt-3">
         <div class="card-header">
-            <h3 class="font-bold"> Symbol Comments</h3>
-            {% if user.is_authenticated and not has_guessed %}
-                <button onclick="toggleCommentForm()" class="btn-secondary text-sm">
-                    Add Comment
+            <h3 class="font-bold">📊 Top Interpretations</h3>
+        </div>
+        <div class="space-y-2">
+            {% for guess in all_guesses|slice:":10" %}
+            <div class="flex justify-between items-center text-sm p-2 hover:bg-gray-50 rounded">
+                <div>
+                    <a href="{% url 'user_profile' guess.user.id %}" class="text-primary">
+                        {{ guess.user.username }}
+                    </a>
+                    <span class="text-gray-500">found</span>
+                    <span class="font-bold text-green-600">{{ guess.correct_words|length }}</span>
+                    <span class="text-gray-500">words</span>
+                    {% if guess.correct_words %}
+                        <span class="text-gray-400 text-xs ml-2">({{ guess.correct_words|join:", " }})</span>
+                    {% endif %}
+                </div>
+                <div class="text-green-600 font-bold">
+                    +{{ guess.score_earned }} pts
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Comments Section -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h3 class="font-bold">💬 Council Comments</h3>
+            {% if user.is_authenticated %}
+                <button onclick="toggleCommentForm()" class="btn-secondary text-sm px-3 py-1">
+                    + Add Comment
                 </button>
             {% endif %}
         </div>
         
-        <div id="comment-form" style="display: none;" class="mb-3">
-            <form method="POST" action="{% url 'comment_create' post.id %}">
+        <!-- Comment Form (hidden by default) -->
+        <div id="comment-form" style="display: none;" class="mb-4 p-3 bg-gray-50 rounded">
+            <h4 class="font-medium mb-2">🗣️ Speak in symbols:</h4>
+            <form method="POST" action="{% url 'comment_create' post.id %}" id="comment-form-element">
                 {% csrf_token %}
+                
                 <div class="form-group">
-                    {% include 'posts/components/symbol_keyboard.html' %}
-
+                    <input type="hidden" name="symbols" id="symbol_sequence" value="">
+                    <div id="comment-symbol-keyboard">
+                        {% include 'posts/components/symbol_keyboard.html' %}
+                    </div>
                 </div>
-                <button type="submit" class="btn-primary">Post Comment</button>
-                <button type="button" onclick="toggleCommentForm()" class="btn">Cancel</button>
+                
+                <div class="flex gap-2 mt-2">
+                    <button type="submit" class="btn-primary px-4 py-2">Post Comment</button>
+                    <button type="button" onclick="toggleCommentForm()" class="btn-warning">Cancel</button>
+                </div>
             </form>
         </div>
         
+        <!-- Existing Comments -->
         {% if comments %}
             {% for comment in comments %}
-            <div class="comment">
-                <div class="comment-header">
-                    <span class="comment-author">{{ comment.author.username }}</span>
-                    <span class="comment-date">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+            <div class="comment mb-3 p-3 bg-gray-50 rounded">
+                <div class="flex justify-between items-center mb-2">
+                    <div>
+                        <a href="{% url 'user_profile' comment.author.id %}" class="font-semibold text-primary">
+                            {{ comment.author.username }}
+                        </a>
+                        <span class="text-gray-400 text-sm ml-2">{{ comment.timestamp|date:"M d, Y H:i" }}</span>
+                    </div>
+                    {% if user.id == comment.author.id or user.is_superuser %}
+                        <a href="{% url 'comment_delete' comment.id %}" 
+                           class="text-red-500 text-sm hover:text-red-700"
+                           onclick="return confirm('Delete this comment?')">
+                            Delete
+                        </a>
+                    {% endif %}
                 </div>
-                <div class="comment-symbols">
+                <div class="flex flex-wrap gap-1">
                     {% for code in comment.get_symbol_codes %}
                         <img src="{% static 'symbols/symbol_'|add:code|add:'.png' %}" 
                              class="symbol-img-sm"
                              alt="{{ code }}">
                     {% endfor %}
                 </div>
-                {% if user.id == comment.author.id or user.is_superuser %}
-                <div class="text-right mt-1">
-                    <a href="{% url 'comment_delete' comment.id %}" class="text-danger text-sm">Delete</a>
-                </div>
-                {% endif %}
             </div>
             {% endfor %}
         {% else %}
-            <p class="text-gray-400 text-center">No comments yet. Be the first to respond with symbols!</p>
+            <p class="text-gray-400 text-center py-4">📜 This must be discussed in the council. Leave a comment.</p>
         {% endif %}
     </div>
     
@@ -176,57 +189,51 @@
 
 <script>
     // Store comment symbols separately from post symbols
-    let commentSymbols = [];
+    window.symbolSequence = [];
     
     function toggleCommentForm() {
         const form = document.getElementById('comment-form');
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        if (form.style.display === 'none') {
+            form.style.display = 'block';
+        } else {
+            form.style.display = 'none';
+            // Clear comment symbols when hiding
+            clearAllCommentSymbols();
+        }
     }
     
-    // Override addSymbol for comment form if active
-    function addCommentSymbol(code) {
-        commentSymbols.push(code);
-        updateCommentPreview();
-        document.getElementById('comment_symbols').value = commentSymbols.join('');
-    }
     
-    function updateCommentPreview() {
-        const previewDiv = document.getElementById('comment-preview');
-        if (commentSymbols.length === 0) {
-            previewDiv.innerHTML = '<span class="text-gray-400">Click symbols to build your comment</span>';
+    function updateSymbolPreview() {
+        const previewDiv = document.getElementById('symbol-preview');
+        if (window.symbolSequence.length === 0) {
+            previewDiv.innerHTML = '<span class="text-gray-400">Click symbols to write your message</span>';
             return;
         }
         
         let html = '';
-        for (let i = 0; i < commentSymbols.length; i++) {
-            const code = commentSymbols[i];
+        for (let i = 0; i < window.symbolSequence.length; i++) {
+            const code = window.symbolSequence[i];
             html += `<img src="/static/symbols/symbol_${code}.png" class="symbol-img-sm inline-block m-1" alt="${code}">`;
         }
         previewDiv.innerHTML = html;
     }
     
-    // Override the global addSymbol for keyboard buttons based on active form
-    const originalAddSymbol = window.addSymbol;
-    window.addSymbol = function(code) {
-        // Check if comment form is visible
-        if (document.getElementById('comment-form') && 
-            document.getElementById('comment-form').style.display === 'block') {
-            addCommentSymbol(code);
-        } else {
-            originalAddSymbol(code);
-        }
-    };
-    
-    function removeLastCommentSymbol() {
-        commentSymbols.pop();
-        updateCommentPreview();
-        document.getElementById('comment_symbols').value = commentSymbols.join('');
+    function updateHiddenInput() {
+        document.getElementById('symbols').value = window.symbolSequence.join('');
     }
     
-    function clearAllCommentSymbols() {
-        commentSymbols = [];
-        updateCommentPreview();
-        document.getElementById('comment_symbols').value = '';
+    document.getElementById('comment-form').addEventListener('submit', function(e) {
+        if (window.symbolSequence.length === 0) {
+            e.preventDefault();
+            alert('Please add at least one symbol!');
+        }
+    });
+    // Reset comment symbols when form is submitted
+    const commentForm = document.getElementById('comment-form-element');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function() {
+            commentSymbols = [];
+        });
     }
 </script>
 {% endblock %}

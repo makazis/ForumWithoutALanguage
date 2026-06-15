@@ -206,7 +206,7 @@ def leaderboard(request):
 def post_detail(request, post_id):
     """Display a single post with its symbols and guessing form"""
     post = get_object_or_404(Post, id=post_id)
-    all_tags = Tag.objects.all()
+    comments = post.comments.all().order_by('-timestamp')
     
     # Check if current user already guessed this post
     has_guessed = False
@@ -215,19 +215,15 @@ def post_detail(request, post_id):
         user_guess = Guess.objects.filter(author=request.user, post=post).first()
         has_guessed = user_guess is not None
     
-    # Get all guesses for this post (for display)
-    all_guesses = post.guesses.select_related('author').prefetch_related('guessed_tags').all()
-    
-    # Get comments (for later - symbol-only comments)
-    comments = post.comments.all().order_by('timestamp') if hasattr(post, 'comments') else []
+    # Get all guesses for this post
+    all_guesses = post.guesses.select_related('author').all().order_by('-score_earned')
     
     context = {
         'post': post,
-        'all_tags': all_tags,
         'has_guessed': has_guessed,
         'user_guess': user_guess,
         'all_guesses': all_guesses,
-        'comments': comments,
+        'comments': comments,  
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -238,16 +234,20 @@ def comment_create(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     
     if request.method == 'POST':
-        symbol_sequence = request.POST.get('symbol_sequence')
-        if symbol_sequence:
+        symbols = request.POST.get('symbols', '')
+        print(symbols)
+        if symbols:
             Comment.objects.create(
                 author=request.user,
                 post=post,
-                symbol_sequence=symbol_sequence,
+                symbols=symbols,
             )
             messages.success(request, "Comment added!")
+        else:
+            messages.error(request, "Please add some symbols to your comment")
     
     return redirect('post_detail', post_id=post.id)
+
 
 @login_required
 def comment_delete(request, comment_id):

@@ -117,6 +117,13 @@ a {
     text-decoration: none;
 }
 
+.btn-warning {
+    background: var(--white);
+    color: var(--warning-color);
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    text-decoration: none;
+}
 .card {
     background: var(--white);
     border-radius: var(--radius);
@@ -206,7 +213,6 @@ a {
     display: block;
 }
 
-/* ===== FORM STYLES ===== */
 .form-group {
     margin-bottom: 1.5rem;
 }
