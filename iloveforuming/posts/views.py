@@ -25,18 +25,16 @@ def post_list(request):
         except User.DoesNotExist:
             pass
     
-    # Apply sorting
     if sort_by == 'least_guesses':
-        # Annotate with guess count and sort by it
         posts = posts.annotate(guess_count2=Count('guesses')).order_by('guess_count2', '-timestamp')
     elif sort_by == 'most_guesses':
         posts = posts.annotate(guess_count2=Count('guesses')).order_by('-guess_count2', '-timestamp')
     elif sort_by == 'oldest':
         posts = posts.order_by('timestamp')
-    else:  # newest (default)
+    else: 
         posts = posts.order_by('-timestamp')
     
-    # Get unique authors for filter dropdown
+    # Get unique authors for filter 
     authors = User.objects.filter(posts__isnull=False).distinct()
     
     # Get current author name for display
@@ -60,9 +58,11 @@ def post_list(request):
 def post_create(request):
     """Create a new post with custom prompt"""
     if request.method == 'POST':
+        #if request.user.is_blocked:
+        #    messages.error(request, "YOU ARE BLOCKED FROM THE SITE!!! FOOL")
+        #    return render(request, 'posts/post_create.html')
         prompt = request.POST.get('prompt')
         symbols = request.POST.get('symbols')
-        print(prompt,symbols)
         if not prompt or not symbols:
             messages.error(request, "Please fill in all fields")
             return render(request, 'posts/post_create.html')
@@ -84,11 +84,14 @@ def post_create_random(request):
     multiplier,random_prompt = get_random_sentence_w_multiplier()
     
     if request.method == 'POST':
+        #if request.user.is_blocked:
+        #    messages.error(request, "YOU ARE BLOCKED FROM THE SITE!!! FOOL")
+        #    return render(request, 'posts/post_create.html')
         symbols = request.POST.get('symbols')
         multiplier=request.POST.get('multiplier')
         random_prompt=request.POST.get('random_prompt')
         if not symbols:
-            messages.error(request, "Please add symbols to explain the prompt")
+            messages.error(request, "Too vague, add more symbols!")
             return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt})
         
         post = Post.objects.create(
@@ -105,7 +108,6 @@ def post_create_random(request):
 
 @login_required
 def submit_guess(request, post_id):
-    """Process a user's word guess and award points"""
     post = get_object_or_404(Post, id=post_id)
     
     # Don't allow guessing on your own post
@@ -119,24 +121,24 @@ def submit_guess(request, post_id):
         return redirect('post_detail', post_id=post.id)
     
     if request.method == 'POST':
+        #if request.user.is_blocked:
+        #    messages.error(request, "YOU ARE BLOCKED FROM THE SITE!!! FOOL")
+        #    return render(request, 'posts/post_details.html')
         guessed_text = request.POST.get('guessed_words', '').strip()
         
         if not guessed_text:
             messages.error(request, "Please enter your guess")
             return redirect('post_detail', post_id=post.id)
         
-        # Get words from prompt
         prompt_words = set(post.get_prompt_words())
         
-        # Get guessed words (split by spaces or commas)
         r=guessed_text.split(" ")
         guessed_words =[i.lower().strip(",.;-!?") for i in r]
         
-        # Find correct words
+        
         correct_words = list(prompt_words.intersection(guessed_words))
         score = len(correct_words) * post.multiplier
         
-        # Create guess record
         guess = Guess.objects.create(
             author=request.user,
             post=post,
@@ -145,32 +147,31 @@ def submit_guess(request, post_id):
             score_earned=score,
         )
         
-        # Award points to guesser
+
         profile, _ = Profile.objects.get_or_create(user=request.user)
         profile.points += score
         profile.save()
         
-        # Award points to post creator (if not already awarded)
         
         author_profile, _ = Profile.objects.get_or_create(user=post.author)
-        # Author gets half of guesser's score
-        author_points = int(score / 2)
+
+        author_points = int(score / 2) #They get half of the points, cuz good post
         author_profile.points += author_points
         author_profile.save()
         post.save()
         
-        # Success message
+
         if score > 0:
             multiplier_text = f" (x{post.multiplier} multiplier!)" if post.multiplier > 1 else ""
             messages.success(
                 request, 
-                f"🎉 You got {len(correct_words)} correct word(s)! +{score} points{multiplier_text}"
+                f" You got {len(correct_words)} correct word(s)! +{score} points{multiplier_text}"
             )
             if len(correct_words) < len(prompt_words):
                 missing = len(prompt_words) - len(correct_words)
-                messages.info(request, f"You missed {missing} word(s). Try another post!")
+                messages.info(request, f"You missed {missing} word(s). Try another vague-post!")
         else:
-            messages.info(request, "No matching words found. Try again on another post!")
+            messages.info(request, "Fool! You have no idea what you're talking about.")
         
     return redirect('post_detail', post_id=post.id)
 
@@ -196,16 +197,14 @@ def user_profile(request, user_id):
         'total_correct_words': total_correct_words,
     }
     return render(request, 'posts/user_profile.html', context)
-# Add this function for leaderboard
-# posts/views.py - Updated leaderboard view
+
 def leaderboard(request):
-    # Get all users with their profiles, ordered by points descending
+    # get users by descending points
     users = User.objects.select_related('profile').order_by('-profile__points').all()
     
-    # Add rank to each user
     ranked_users = []
     for idx, user in enumerate(users, 1):
-        # Ensure profile exists
+
         if not hasattr(user, 'profile'):
             Profile.objects.get_or_create(user=user)
         
@@ -217,7 +216,6 @@ def leaderboard(request):
             'guess_count': user.guesses.count(),
         })
     
-    # Get current user's rank (if authenticated)
     user_rank = None
     if request.user.is_authenticated:
         for item in ranked_users:
@@ -232,19 +230,16 @@ def leaderboard(request):
     }
     return render(request, 'posts/leaderboard.html', context)
 
-# Update your post_detail view to include the guessing logic
 def post_detail(request, post_id):
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all().order_by('-timestamp')
     
-    # Check if current user already guessed this post
     has_guessed = False
     user_guess = None
     if request.user.is_authenticated:
         user_guess = Guess.objects.filter(author=request.user, post=post).first()
         has_guessed = user_guess is not None
     
-    # Get all guesses for this post
     all_guesses = post.guesses.select_related('author').all().order_by('-score_earned')
     
     context = {
@@ -263,7 +258,6 @@ def comment_create(request, post_id):
     
     if request.method == 'POST':
         symbols = request.POST.get('symbols', '')
-        print(symbols)
         if symbols:
             Comment.objects.create(
                 author=request.user,
@@ -289,8 +283,6 @@ def comment_delete(request, comment_id):
         messages.error(request, "You don't have permission to delete this comment")
     
     return redirect('post_detail', post_id=post_id)
-
-# posts/views.py - Add these views
 
 @login_required
 def post_edit(request, post_id):

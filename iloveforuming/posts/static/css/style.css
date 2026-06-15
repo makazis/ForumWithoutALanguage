@@ -13,6 +13,20 @@
     --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
     --radius: 0.5rem;
 }
+[data-theme='dark']{
+    --primary-color: #00ffb3;
+    --primary-dark: #00fc7e;
+    --secondary-color: #ffea00;
+    --danger-color: #ff6600;
+    --warning-color: #66ff00;
+    --dark: #cfcfcf;
+    --gray: #dadada;
+    --light-gray: #ffffff;
+    --white: #ffffff;
+}
+[data-theme='dark'] img{
+    filter: invert(1);
+}
 
 
 .cinzel-uniquifier {

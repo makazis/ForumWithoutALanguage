@@ -24,6 +24,21 @@
             {% else %}
                 <a href="{% url 'login' %}" class="btn-primary">Login</a>
             {% endif %}
+            <button id="theme-toggle" class="btn-primary">Change theme</button>
         </div>
     </div>
+    
+    <script>
+        const themeToggle = document.getElementById("theme-toggle");
+    const docElem = document.documentElement;
+
+    themeToggle.addEventListener("click", ()=>{
+        const isDark = docElem.getAttribute("data-theme") == "dark";
+        docElem.setAttribute("data-theme", isDark? "" : "dark");
+
+        localStorage.setItem("theme", isDark ? "light" : "dark");
+
+    })
+
+    </script>
 </nav>
