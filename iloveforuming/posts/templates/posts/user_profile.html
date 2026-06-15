@@ -64,7 +64,8 @@
             
             {% if posts|length > 5 %}
                 <div class="text-center mt-2">
-                    <a href="{% url 'post_list' %}?user={{ profile_user.id }}" class="btn-secondary">
+                    <a href="{% url 'post_list' %}?author={{ profile_user.username }}&sort=newest" 
+       class="btn-primary text-sm px-3 py-1">
                         View all {{ total_posts }} posts →
                     </a>
                 </div>

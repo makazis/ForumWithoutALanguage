@@ -10,16 +10,51 @@ from .random_sentences import get_random_sentence_w_multiplier
 
 # Create your views here.
 def post_list(request):
-    #we get some posts depending on the query, either by time, or by least guessed on
-    posts = Post.objects.all().order_by('-timestamp')
-    least_guessed = request.GET.get('least_guessed')
-    if least_guessed:
-        posts = posts.annotate(guess_count=Count('guesses')).order_by('guess_count')
-    #we get a paginator with 10 posts in a page
-    paginator = Paginator(posts, 10)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    return render(request, 'posts/post_list.html', {'page_obj': page_obj,'posts':posts})
+    """Display all posts with sorting and filtering options"""
+    posts = Post.objects.all()
+    
+    # Get filter/sort parameters from URL
+    sort_by = request.GET.get('sort', 'newest')
+    author_filter = request.GET.get('author', None)
+    
+    # Apply author filter if specified
+    if author_filter:
+        try:
+            author = User.objects.get(username=author_filter)
+            posts = posts.filter(author=author)
+        except User.DoesNotExist:
+            pass
+    
+    # Apply sorting
+    if sort_by == 'least_guesses':
+        # Annotate with guess count and sort by it
+        posts = posts.annotate(guess_count2=Count('guesses')).order_by('guess_count2', '-timestamp')
+    elif sort_by == 'most_guesses':
+        posts = posts.annotate(guess_count2=Count('guesses')).order_by('-guess_count2', '-timestamp')
+    elif sort_by == 'oldest':
+        posts = posts.order_by('timestamp')
+    else:  # newest (default)
+        posts = posts.order_by('-timestamp')
+    
+    # Get unique authors for filter dropdown
+    authors = User.objects.filter(posts__isnull=False).distinct()
+    
+    # Get current author name for display
+    current_author = None
+    if author_filter:
+        try:
+            current_author = User.objects.get(username=author_filter)
+        except User.DoesNotExist:
+            pass
+    
+    context = {
+        'posts': posts,
+        'current_sort': sort_by,
+        'authors': authors,
+        'current_author': current_author,
+        'author_filter': author_filter,
+    }
+    return render(request, 'posts/post_list.html', context)
 
 @login_required
 def post_create(request):
@@ -44,14 +79,14 @@ def post_create(request):
     
     return render(request, 'posts/post_create.html')
 
-# ===== RANDOM POST CREATE =====
 @login_required
 def post_create_random(request):
     multiplier,random_prompt = get_random_sentence_w_multiplier()
     
     if request.method == 'POST':
         symbols = request.POST.get('symbols')
-        
+        multiplier=request.POST.get('multiplier')
+        random_prompt=request.POST.get('random_prompt')
         if not symbols:
             messages.error(request, "Please add symbols to explain the prompt")
             return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt})
@@ -68,7 +103,6 @@ def post_create_random(request):
     
     return render(request, 'posts/post_create_random.html', {'random_prompt': random_prompt,'multiplier': multiplier})
 
-# ===== SUBMIT GUESS =====
 @login_required
 def submit_guess(request, post_id):
     """Process a user's word guess and award points"""
@@ -134,15 +168,13 @@ def submit_guess(request, post_id):
             )
             if len(correct_words) < len(prompt_words):
                 missing = len(prompt_words) - len(correct_words)
-                messages.info(request, f"💡 You missed {missing} word(s). Try another post!")
+                messages.info(request, f"You missed {missing} word(s). Try another post!")
         else:
-            messages.info(request, "❌ No matching words found. Try again on another post!")
+            messages.info(request, "No matching words found. Try again on another post!")
         
     return redirect('post_detail', post_id=post.id)
 
-# posts/views.py - Updated user_profile view
 def user_profile(request, user_id):
-    """Display user profile with their posts and stats"""
     profile_user = get_object_or_404(User, id=user_id)
     profile, _ = Profile.objects.get_or_create(user=profile_user)
     user_posts = profile_user.posts.all().order_by('-timestamp')
@@ -167,7 +199,6 @@ def user_profile(request, user_id):
 # Add this function for leaderboard
 # posts/views.py - Updated leaderboard view
 def leaderboard(request):
-    """Display global leaderboard sorted by points"""
     # Get all users with their profiles, ordered by points descending
     users = User.objects.select_related('profile').order_by('-profile__points').all()
     
@@ -203,7 +234,6 @@ def leaderboard(request):
 
 # Update your post_detail view to include the guessing logic
 def post_detail(request, post_id):
-    """Display a single post with its symbols and guessing form"""
     post = get_object_or_404(Post, id=post_id)
     comments = post.comments.all().order_by('-timestamp')
     
@@ -229,7 +259,6 @@ def post_detail(request, post_id):
 
 @login_required
 def comment_create(request, post_id):
-    """Add a symbol-only comment to a post"""
     post = get_object_or_404(Post, id=post_id)
     
     if request.method == 'POST':
@@ -250,7 +279,6 @@ def comment_create(request, post_id):
 
 @login_required
 def comment_delete(request, comment_id):
-    """Delete a comment (author or admin only)"""
     comment = get_object_or_404(Comment, id=comment_id)
     post_id = comment.post.id
     
@@ -261,3 +289,48 @@ def comment_delete(request, comment_id):
         messages.error(request, "You don't have permission to delete this comment")
     
     return redirect('post_detail', post_id=post_id)
+
+# posts/views.py - Add these views
+
+@login_required
+def post_edit(request, post_id):
+    post = get_object_or_404(Post, id=post_id, author=request.user)
+    
+    if request.method == 'POST':
+        symbols = request.POST.get('symbols')
+        
+        if not symbols:
+            messages.error(request, "Please add symbols to explain the prompt")
+            return render(request, 'posts/post_edit.html', {'post': post})
+        
+        post.symbols = symbols
+        post.save()
+        
+        messages.success(request, "Post updated successfully!")
+        return redirect('post_detail', post_id=post.id)
+    
+    return render(request, 'posts/post_edit.html', {'post': post})
+
+
+@login_required
+def post_delete(request, post_id):
+    post = get_object_or_404(Post, id=post_id, author=request.user)
+    
+    if request.method == 'POST':
+        post.delete()
+        messages.success(request, "Post deleted successfully!")
+        return redirect('post_list')
+    
+    return render(request, 'posts/post_confirm_delete.html', {'post': post})
+
+
+@login_required
+def admin_post_delete(request, post_id):
+    if not request.user.is_superuser:
+        messages.error(request, "You don't have permission to do that")
+        return redirect('post_list')
+    
+    post = get_object_or_404(Post, id=post_id)
+    post.delete()
+    messages.success(request, f"Post by {post.author.username} has been deleted")
+    return redirect('post_list')

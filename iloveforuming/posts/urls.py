@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path,include
 from django.contrib.auth import views as auth_views
 from . import views
 urlpatterns = [
@@ -16,4 +16,8 @@ urlpatterns = [
     path('post/create/random/', views.post_create_random, name='post_create_random'),
     path('post/<int:post_id>/comment/', views.comment_create, name='comment_create'),
     path('comment/<int:comment_id>/delete/', views.comment_delete, name='comment_delete'),
+    path('post/<int:post_id>/edit/', views.post_edit, name='post_edit'),
+    path('post/<int:post_id>/delete/', views.post_delete, name='post_delete'),
+    path('admin/post/<int:post_id>/delete/', views.admin_post_delete, name='admin_post_delete'),
+    path('accounts/', include('allauth.urls')),
 ]

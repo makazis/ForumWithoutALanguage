@@ -21,7 +21,8 @@
         
         <div class="form-group">
             <input type="hidden" name="symbols" id="symbol_sequence" required>
-            
+            <input type="hidden" name="multiplier" id="ss3" required value="{{multiplier}}">
+            <input type="hidden" name="random_prompt" id="ss2" required value="{{random_prompt}}">
             {% include 'posts/components/symbol_keyboard.html' %}
         </div>
         

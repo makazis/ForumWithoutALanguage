@@ -5,9 +5,32 @@
 {% block title %}All Posts{% endblock %}
 
 {% block content %}
-<h1 class="card-title mb-2">All Posts</h1>
 
+<h1 class="card-title mb-2">Sacred Texts</h1>
+<div class="flex gap-2">
+        <!-- Sort Dropdown -->
+        <div class="relative">
+            <select onchange="window.location.href=this.value" class="form-input dropdown-menu">
+                <option value="?{% if author_filter %}author={{ author_filter }}&{% endif %}sort=newest" 
+                        {% if current_sort == 'newest' %}selected{% endif %}>
+                    Newest First
+                </option>
+                <option value="?{% if author_filter %}author={{ author_filter }}&{% endif %}sort=oldest"
+                        {% if current_sort == 'oldest' %}selected{% endif %}>
+                    Oldest First
+                </option>
+                <option value="?{% if author_filter %}author={{ author_filter }}&{% endif %}sort=least_guesses"
+                        {% if current_sort == 'least_guesses' %}selected{% endif %}>
+                    Least Guesses First
+                </option>
+                <option value="?{% if author_filter %}author={{ author_filter }}&{% endif %}sort=most_guesses"
+                        {% if current_sort == 'most_guesses' %}selected{% endif %}>
+                    Most Guesses First
+                </option>
+            </select>
+        </div>
 <div class="grid">
+    
     {% for post in posts %}
     <div class="card">
         <div class="card-header">

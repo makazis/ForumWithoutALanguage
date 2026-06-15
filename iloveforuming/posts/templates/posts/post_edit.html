@@ -1,0 +1,106 @@
+<!-- posts/templates/posts/post_edit.html -->
+{% extends 'posts/base.html' %}
+{% load static %}
+
+{% block title %}Edit Post{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title"> Edit Your Post</h1>
+        </div>
+        
+        <form method="POST" id="edit-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label class="form-label">Current Symbol Explanation:</label>
+                <div class="symbol-container mb-2">
+                    <div class="symbol-grid">
+                        {% for code in post.get_symbol_codes %}
+                            <img src="{% static 'symbols/symbol_'|add:code|add:'.png' %}" 
+                                 class="symbol-img-lg"
+                                 alt="{{ code }}">
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <input type="hidden" name="symbols" id="symbol_sequence" required value="">
+                
+                {% include 'posts/components/symbol_keyboard.html' %}
+                
+            </div>
+            
+            {% if post.is_random %}
+                <div class="bg-purple-100 p-2 rounded mb-3 text-center text-sm">
+                    This is a random sentence post (x{{ post.point_multiplier }} multiplier)
+                </div>
+            {% endif %}
+            
+            <div class="flex gap-2 mt-3">
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+                <a href="{% url 'post_detail' post.id %}" class="btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Store current symbols as editable list
+    let currentSymbols = "{{ post.symbols }}".split('');
+    let symbolSequence = [];
+    
+    // Parse existing symbols into chunks of 2
+    for (let i = 0; i < currentSymbols.length; i += 2) {
+        if (currentSymbols[i] && currentSymbols[i+1]) {
+            symbolSequence.push(currentSymbols[i] + currentSymbols[i+1]);
+        }
+    }
+    
+    function addSymbol(code) {
+        symbolSequence.push(code);
+        updatePreview();
+        updateHiddenInput();
+    }
+    
+    function removeLastSymbol() {
+        if (symbolSequence.length > 0) {
+            symbolSequence.pop();
+            updatePreview();
+            updateHiddenInput();
+        }
+    }
+    
+    function clearAllSymbols() {
+        symbolSequence = [];
+        updatePreview();
+        updateHiddenInput();
+    }
+    
+    function updatePreview() {
+        const previewDiv = document.getElementById('symbol-preview');
+        if (symbolSequence.length === 0) {
+            previewDiv.innerHTML = '<span class="text-gray-400">Click symbols to build your message</span>';
+            return;
+        }
+        
+        let html = '';
+        for (let i = 0; i < symbolSequence.length; i++) {
+            const code = symbolSequence[i];
+            html += `<img src="/static/symbols/symbol_${code}.png" class="symbol-img-sm inline-block m-1" alt="${code}">`;
+        }
+        previewDiv.innerHTML = html;
+    }
+    
+    function updateHiddenInput() {
+        document.getElementById('symbol_sequence').value = symbolSequence.join('');
+    }
+    clearAllSymbols()
+    // Initialize preview
+    updatePreview();
+    updateHiddenInput();
+</script>
+{% endblock %}

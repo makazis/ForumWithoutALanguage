@@ -18,6 +18,33 @@
             <div class="text-gray-400 text-sm">
                 {{ post.timestamp|date:"F j, Y g:i A" }}
             </div>
+        <!-- Edit/Delete buttons only show for author or admin -->
+        {% if user == post.author %}
+            <div>
+                <a href="{% url 'post_edit' post.id %}" 
+                   class="" 
+                   title="Edit Post">
+                    Edit Post
+                </a>
+                |  |  |
+                <a href="{% url 'post_delete' post.id %}" 
+                   class="" 
+                   title="Delete Post"
+                   onclick="return confirm('Delete this post?')">
+                    Delete Post
+                </a>
+            </div>
+        {% elif user.is_superuser %}
+            <div class="flex gap-1">
+                <a href="{% url 'admin_post_delete' post.id %}" 
+                   class="text-red-500 hover:text-red-700 text-sm" 
+                   title="Admin Delete Post"
+                   onclick="return confirm('Admin delete this post?')">
+                    Admin Delete Post
+                </a>
+            </div>
+        {% endif %}
+    </div>
         </div>
         
         <!-- Symbol Display -->

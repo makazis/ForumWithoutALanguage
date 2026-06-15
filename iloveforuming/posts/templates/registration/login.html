@@ -2,7 +2,7 @@
 {% extends 'posts/base.html' %}
 
 {% block title %}Login{% endblock %}
-
+{% load socialaccount %}
 {% block content %}
 <div class="max-w-md mx-auto">
     <div class="card">
@@ -33,7 +33,18 @@
                 Login
             </button>
         </form>
-        
+        <div class="relative flex py-3 items-center">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="flex-shrink mx-3 text-gray-400 text-sm">or</span>
+            <div class="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <div class="text-center">
+            <a href="{% provider_login_url 'google' %}" class="w-full inline-flex justify-center items-center gap-2 bg-white border border-gray-300 text-gray-700 rounded-lg px-4 py-2 hover:bg-gray-50">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google logo" class="w-5 h-5">
+                <span>Continue with Google</span>
+            </a>
+        </div>
         <div class="text-center mt-3 text-gray-500 text-sm">
             Don't have an account? Contact an administrator.
         </div>
