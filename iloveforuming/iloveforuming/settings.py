@@ -86,8 +86,16 @@ WSGI_APPLICATION = 'iloveforuming.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'forum_db',           # The database you created
+        'USER': 'root',                # Your MySQL username
+        'PASSWORD': 'Kazis11!',  # The password you set
+        'HOST': '127.0.0.1',          # Localhost
+        'PORT': '3306',                # Default MySQL port
+        'OPTIONS': {
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+            'charset': 'utf8mb4',
+        },
     }
 }
 
